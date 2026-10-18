@@ -21,8 +21,13 @@ const ACTIONS = [
 	{ action: "test", label: "Run one search and report latency and cost" },
 ] as const;
 
+// Below this width the footer keeps the icon and one state word; at or above it, the name too.
+const WIDE_COLUMNS = 100;
+
 let enabled = true;
 let calls = 0;
+let resizeHandler: (() => void) | undefined;
+let resizeCtx: ExtensionContext | undefined;
 
 export function isEnabled(): boolean {
 	return enabled;
@@ -32,11 +37,13 @@ export async function startSession(pi: ExtensionAPI, ctx: ExtensionContext): Pro
 	calls = 0;
 	enabled = await isEnabledByDefault();
 	if (!enabled) applyActiveTools(pi, false);
+	watchWidth(ctx);
 	refreshStatus(ctx);
 }
 
 export function clearSessionStatus(ctx: ExtensionContext | undefined): void {
 	calls = 0;
+	unwatchWidth();
 	if (ctx?.hasUI) ctx.ui.setStatus(STATUS_KEY, undefined);
 }
 
@@ -123,21 +130,41 @@ async function testConnection(client: DeepSeekClient, ctx: ExtensionCommandConte
 
 function refreshStatus(ctx: ExtensionContext | undefined): void {
 	if (!ctx?.hasUI) return;
+	ctx.ui.setStatus(STATUS_KEY, formatStatus());
+}
+
+export function formatStatus(columns: number | undefined = process.stdout.columns): string {
+	const wide = columns !== undefined && columns >= WIDE_COLUMNS;
+	const name = wide ? "DeepSeek Tools " : "";
 	let found = true;
 	try {
 		found = Boolean(findApiKey());
 	} catch {
 		found = false;
 	}
-	if (!found) {
-		ctx.ui.setStatus(STATUS_KEY, `${ICON} no key · /login deepseek`);
-		return;
-	}
-	if (!enabled) {
-		ctx.ui.setStatus(STATUS_KEY, `${ICON} off`);
-		return;
-	}
-	ctx.ui.setStatus(STATUS_KEY, calls === 0 ? `${ICON} on` : `${ICON} on · ¥${yuan(calls * PRICE_PER_CALL_YUAN)}`);
+	if (!found) return `${ICON} ${name}no key · /login deepseek`;
+	if (!enabled) return `${ICON} ${name}off`;
+	return `${ICON} ${name}on${calls === 0 ? "" : ` · ¥${yuan(calls * PRICE_PER_CALL_YUAN)}`}`;
+}
+
+function watchWidth(ctx: ExtensionContext): void {
+	if (!ctx.hasUI) return;
+	unwatchWidth();
+	resizeCtx = ctx;
+	resizeHandler = () => {
+		try {
+			refreshStatus(resizeCtx);
+		} catch {
+			// Resizing must never break a session.
+		}
+	};
+	process.stdout.on("resize", resizeHandler);
+}
+
+function unwatchWidth(): void {
+	if (resizeHandler) process.stdout.off("resize", resizeHandler);
+	resizeHandler = undefined;
+	resizeCtx = undefined;
 }
 
 async function isEnabledByDefault(settingsPath = join(getAgentDir(), "settings.json")): Promise<boolean> {

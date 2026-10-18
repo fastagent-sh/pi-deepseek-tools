@@ -14,7 +14,14 @@ import type {
 import extension from "../index.ts";
 import type { DeepSeekClient, SearchResult } from "../deepseek.ts";
 import { DeepSeekError } from "../deepseek.ts";
-import { isEnabled, recordCall, registerDeepSeekCommand, startSession } from "../commands.ts";
+import {
+	clearSessionStatus,
+	formatStatus,
+	isEnabled,
+	recordCall,
+	registerDeepSeekCommand,
+	startSession,
+} from "../commands.ts";
 
 const TOOL_NAMES = ["deepseek_search", "deepseek_fetch"];
 
@@ -358,6 +365,46 @@ test("footer text names the tools, the state and the spend", async () => {
 		recordCall(harness.ctx);
 		recordCall(harness.ctx);
 		assert.equal(harness.statuses.get(STATUS_KEY), `${ICON} on · ¥0.010`);
+	} finally {
+		env.restore();
+	}
+});
+
+test("the footer adds the product name only on a wide terminal", async () => {
+	const env = isolateEnv();
+	process.env.DEEPSEEK_API_KEY = "sk-0123456789abcdefghij";
+	try {
+		const harness = commandHarness();
+		await startSession(harness.pi, harness.ctx);
+		assert.equal(formatStatus(80), `${ICON} on`);
+		assert.equal(formatStatus(140), `${ICON} DeepSeek Tools on`);
+
+		recordCall(harness.ctx);
+		assert.equal(formatStatus(80), `${ICON} on · ¥0.005`);
+		assert.equal(formatStatus(140), `${ICON} DeepSeek Tools on · ¥0.005`);
+
+		await harness.run("");
+		assert.equal(formatStatus(80), `${ICON} off`);
+		assert.equal(formatStatus(140), `${ICON} DeepSeek Tools off`);
+	} finally {
+		env.restore();
+	}
+});
+
+test("a terminal resize refreshes the footer", async () => {
+	const env = isolateEnv();
+	process.env.DEEPSEEK_API_KEY = "sk-0123456789abcdefghij";
+	try {
+		const harness = commandHarness();
+		await startSession(harness.pi, harness.ctx);
+		harness.statuses.clear();
+		process.stdout.emit("resize");
+		assert.equal(harness.statuses.get(STATUS_KEY), `${ICON} on`);
+
+		clearSessionStatus(harness.ctx);
+		harness.statuses.clear();
+		process.stdout.emit("resize");
+		assert.equal(harness.statuses.size, 0, "the resize listener must be removed at shutdown");
 	} finally {
 		env.restore();
 	}

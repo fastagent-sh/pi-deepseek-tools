@@ -88,7 +88,7 @@ One command, named after the package. It reports state; setting a key stays with
 | `/deepseek-tools status` | State, key source (masked), default result count, calls and spend this session |
 | `/deepseek-tools test` | One real search, reported with latency and cost |
 
-The footer always shows the DeepSeek whale and the state, so a paid call is never a surprise: `🐳 on`, the same with `· ¥0.015` once a session has spent money, `🐳 off`, or `🐳 no key · /login deepseek`. Turning the tools off removes them from the model's toolset, so it cannot call them and nothing is billed.
+The footer always shows the DeepSeek whale and the state, so a paid call is never a surprise: `🐳 on`, the same with `· ¥0.015` once a session has spent money, `🐳 off`, or `🐳 no key · /login deepseek`. From 100 columns up it also carries the name, `🐳 DeepSeek Tools on · ¥0.015`, and it re-renders when the terminal is resized. Turning the tools off removes them from the model's toolset, so it cannot call them and nothing is billed.
 
 The tools are on by default. To start every session with them off, add this to `~/.pi/agent/settings.json`:
 
