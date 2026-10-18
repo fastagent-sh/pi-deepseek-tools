@@ -2,7 +2,7 @@ import type { ExtensionAPI, ExtensionCommandContext, ExtensionContext } from "@e
 import { PRICE_PER_CALL_YUAN, findApiKey, type DeepSeekClient } from "./deepseek.ts";
 
 const STATUS_KEY = "deepseek";
-const USAGE = "Usage: /deepseek-tools [status|test] · key from /login deepseek or DEEPSEEK_API_KEY";
+const USAGE = "Usage: /deepseek-tools [status|test]";
 const ACTIONS = [
 	{ action: "status", label: "Show the key source, defaults and session spend" },
 	{ action: "test", label: "Run one search and report latency and cost" },
