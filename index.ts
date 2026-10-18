@@ -52,7 +52,7 @@ export default function (pi: ExtensionAPI) {
 			query: Type.String({
 				description: "Search query, 1-128 Unicode characters. Search operators are passed through unchanged.",
 			}),
-			count: Type.Optional(Type.Integer({ minimum: 1, maximum: 50, description: "Number of results (default 10)" })),
+			count: Type.Optional(Type.Integer({ minimum: 1, maximum: 50, description: "Number of results (default 5)" })),
 			includeContent: Type.Optional(
 				Type.Boolean({
 					description:

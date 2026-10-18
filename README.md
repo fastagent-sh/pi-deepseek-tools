@@ -19,7 +19,7 @@ pi install npm:@fastagent-sh/pi-deepseek-web
 
 | Tool | Endpoint | Returns |
 |---|---|---|
-| `deepseek_search` | `POST /v1/tools/search` | Ranked results: title, URL, 600-800 character summary, site, date, `rerank_score` (0-3), `authority` (0-4), optional page text |
+| `deepseek_search` | `POST /v1/tools/search` | Ranked results: title, URL, a summary written for models (typically 600-800 characters), site, date, `rerank_score` (0-3), `authority` (0-4), optional page text |
 | `deepseek_fetch` | `POST /v1/tools/fetch` | One page as a title plus Markdown body |
 
 ## Why this package
@@ -53,8 +53,8 @@ List prices in October 2026. `api.deepseek.com` is reached directly from mainlan
 Resolved in this order:
 
 1. `DEEPSEEK_API_KEY`
-2. The `deepseek` credential from `pi auth` (`~/.pi/agent/auth.json`)
-3. `deepseekApiKey` in `~/.pi/agent/web-search.json` (the field `pi-web-access` uses)
+2. The `deepseek` credential from `pi auth` (`~/.pi/agent/auth.json`, or `$PI_CODING_AGENT_DIR` when set)
+3. `deepseekApiKey` in `web-search.json` next to `auth.json` (the field `pi-web-access` uses)
 
 ## Tools
 
@@ -63,7 +63,7 @@ Resolved in this order:
 | Parameter | Type | Notes |
 |---|---|---|
 | `query` | string, required | 1-128 characters. Operators pass through: `site:`, `-site:`, `-word`, `-"phrase"`, `"phrase"`, `lang:zh,en`, `after:2025-01-01`, `before:2026-06-01` |
-| `count` | integer | 1-50, default 10 |
+| `count` | integer | 1-50, default 5. Five results keep one search near 3k tokens; raise it for research |
 | `includeContent` | boolean | Also return extracted page text per result (default false). Costs context; prefer `deepseek_fetch` for one page |
 
 ```
@@ -89,13 +89,18 @@ Text output is truncated at 50 KB / 2000 lines. A page that exceeds the limit is
 
 Each endpoint allows 5 QPS per account; the retry loop absorbs bursts from parallel tool calls. A `query` over 128 characters is rejected before the request is sent. Billing follows the [DeepSeek price list](https://api-docs.deepseek.com/zh-cn/guides/search/#计费): only a request that returns results is charged.
 
+## Known limitations
+
+- A site's own error page comes back as content when DeepSeek can extract it, so a successful fetch does not prove the URL existed.
+- Some sites are refused by DeepSeek's fetcher (Wikipedia is one). The error names the reason, and the search summary usually carries enough to answer.
+- Network failures other than timeouts are reported without a retry.
+
 ## Development
 
 ```bash
 npm install
 npm test        # node --test against a local mock server
 npm run typecheck
-npm audit --omit=dev
 ```
 
 Publishing runs from a GitHub Release (`v1.0.0`) through Trusted Publishing with provenance; see [`.github/workflows/publish.yml`](.github/workflows/publish.yml).

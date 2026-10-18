@@ -107,7 +107,7 @@ export function createDeepSeekClient(options: DeepSeekClientOptions = {}): DeepS
 		}
 	}
 
-	async function search({ query, count = 10, includeContent = false, signal }: SearchOptions): Promise<SearchResult[]> {
+	async function search({ query, count = 5, includeContent = false, signal }: SearchOptions): Promise<SearchResult[]> {
 		const normalized = query.trim();
 		if (!normalized) throw new DeepSeekError("query must not be empty");
 		const queryLength = [...normalized].length;
@@ -149,7 +149,12 @@ export function createDeepSeekClient(options: DeepSeekClientOptions = {}): DeepS
 	async function fetchPage(url: string, { signal }: { signal?: AbortSignal } = {}): Promise<FetchedPage> {
 		const normalized = url.trim();
 		assertFetchableUrl(normalized);
-		const data = await post("/v1/tools/fetch", { url: normalized }, FETCH_TIMEOUT_MS, signal);
+		let data: unknown;
+		try {
+			data = await post("/v1/tools/fetch", { url: normalized }, FETCH_TIMEOUT_MS, signal);
+		} catch (error) {
+			throw annotateFetchError(error);
+		}
 		if (!isRecord(data) || typeof data.content !== "string" || !data.content.trim()) {
 			throw new DeepSeekError("fetch response is missing page content");
 		}
@@ -193,7 +198,7 @@ export function resolveApiKey(): string {
 	const stored = readStoredCredential("deepseek");
 	const storedKey = stored?.type === "api_key" ? stored.key?.trim() : undefined;
 	if (storedKey) return storedKey;
-	const configPath = join(homedir(), ".pi", "agent", "web-search.json");
+	const configPath = webSearchConfigPath();
 	if (existsSync(configPath)) {
 		let parsed: unknown;
 		try {
@@ -208,6 +213,33 @@ export function resolveApiKey(): string {
 		"DeepSeek API key not found. Run `pi auth` (or set DEEPSEEK_API_KEY, or add \"deepseekApiKey\" to " +
 			`${configPath}). Get a key at https://platform.deepseek.com/api_keys`,
 	);
+}
+
+// The same file and field pi-web-access reads, so one configured key serves both packages.
+function webSearchConfigPath(): string {
+	const agentDir = process.env.PI_CODING_AGENT_DIR;
+	if (agentDir) return join(agentDir, "web-search.json");
+	const current = join(homedir(), ".pi", "agent", "web-search.json");
+	if (existsSync(current)) return current;
+	const legacy = join(homedir(), ".pi", "web-search.json");
+	return existsSync(legacy) ? legacy : current;
+}
+
+// The API answers 404 when a page yields no Markdown and 403 when policy refuses it; say so, since the
+// status alone reads like a wrong URL to the model.
+function annotateFetchError(error: unknown): unknown {
+	if (!(error instanceof DeepSeekError) || error.status === undefined) return error;
+	if (error.status === 403) {
+		return new DeepSeekError(`${error.message}. The site refused the fetch through DeepSeek's security policy.`, 403);
+	}
+	if (error.status === 404) {
+		return new DeepSeekError(
+			`${error.message}. DeepSeek got no usable page: the URL may be unavailable, blocked by the site, ` +
+				"an unsupported content type, or without extractable text. Try another source.",
+			404,
+		);
+	}
+	return error;
 }
 
 function assertFetchableUrl(url: string): void {

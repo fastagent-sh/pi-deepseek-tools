@@ -1,11 +1,15 @@
 import assert from "node:assert/strict";
+import { mkdtempSync, writeFileSync } from "node:fs";
 import { createServer, type ServerResponse } from "node:http";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import test from "node:test";
 import {
 	createDeepSeekClient,
 	DeepSeekError,
 	formatFetchedPage,
 	formatSearchResults,
+	resolveApiKey,
 	type SearchResult,
 } from "../deepseek.ts";
 
@@ -81,6 +85,17 @@ test("search sends the documented body and maps results", async () => {
 				score: 2.4,
 				authority: 3,
 			});
+		},
+	);
+});
+
+test("search defaults to five results without page content", async () => {
+	await withServer(
+		(_request, response) => reply(response, 200, { results: [] }),
+		async (baseUrl, requests) => {
+			const client = createDeepSeekClient({ apiKey: "test-key", baseUrl });
+			await client.search({ query: "q" });
+			assert.deepEqual(requests[0].body, { query: "q", count: 5, need_content: false });
 		},
 	);
 });
@@ -163,6 +178,46 @@ test("fetchPage rejects URLs the API refuses", async () => {
 	await assert.rejects(client.fetchPage("file:///etc/passwd"), /must use http or https/);
 	await assert.rejects(client.fetchPage("https://user:secret@example.com/"), /must not contain credentials/);
 	await assert.rejects(client.fetchPage("not a url"), /not a valid absolute URL/);
+});
+
+test("fetchPage explains a page DeepSeek could not read", async () => {
+	await withServer(
+		(_request, response) => reply(response, 404, { error: { message: "failed to fetch URL" } }),
+		async (baseUrl) => {
+			const client = createDeepSeekClient({ apiKey: "test-key", baseUrl });
+			await assert.rejects(client.fetchPage("https://example.com/x"), (error: unknown) => {
+				assert.ok(error instanceof DeepSeekError);
+				assert.equal(error.status, 404);
+				assert.match(error.message, /failed to fetch URL\. DeepSeek got no usable page/);
+				return true;
+			});
+		},
+	);
+});
+
+test("resolveApiKey prefers the environment, then the shared config file", () => {
+	const saved = {
+		home: process.env.HOME,
+		agentDir: process.env.PI_CODING_AGENT_DIR,
+		key: process.env.DEEPSEEK_API_KEY,
+	};
+	const dir = mkdtempSync(join(tmpdir(), "pi-deepseek-key-"));
+	process.env.HOME = dir;
+	process.env.PI_CODING_AGENT_DIR = dir;
+	try {
+		delete process.env.DEEPSEEK_API_KEY;
+		assert.throws(() => resolveApiKey(), /DeepSeek API key not found/);
+		writeFileSync(join(dir, "web-search.json"), JSON.stringify({ deepseekApiKey: "sk-from-config" }));
+		assert.equal(resolveApiKey(), "sk-from-config");
+		process.env.DEEPSEEK_API_KEY = "sk-from-env";
+		assert.equal(resolveApiKey(), "sk-from-env");
+	} finally {
+		process.env.HOME = saved.home;
+		if (saved.agentDir === undefined) delete process.env.PI_CODING_AGENT_DIR;
+		else process.env.PI_CODING_AGENT_DIR = saved.agentDir;
+		if (saved.key === undefined) delete process.env.DEEPSEEK_API_KEY;
+		else process.env.DEEPSEEK_API_KEY = saved.key;
+	}
 });
 
 test("formatSearchResults includes page bodies only when asked", () => {
