@@ -9,12 +9,11 @@ import {
 } from "@earendil-works/pi-coding-agent";
 import { PRICE_PER_CALL_YUAN, findApiKey, type DeepSeekClient } from "./deepseek.ts";
 
-const STATUS_KEY = "deepseek";
+const LABEL = "deepseek-tools(search/fetch)";
+const STATUS_KEY = "deepseek-tools";
 const TOOL_NAMES = ["deepseek_search", "deepseek_fetch"];
-const USAGE = "Usage: /deepseek-tools [on|off|toggle|status|test]";
+const USAGE = "Usage: /deepseek-tools [status|test] · no argument toggles the tools";
 const ACTIONS = [
-	{ action: "on", label: "Enable the tools; every successful call is billed" },
-	{ action: "off", label: "Disable the tools for this session" },
 	{ action: "status", label: "Key source, defaults and session spend" },
 	{ action: "test", label: "Run one search and report latency and cost" },
 ] as const;
@@ -45,7 +44,7 @@ export function recordCall(ctx: ExtensionContext | undefined): void {
 
 export function registerDeepSeekCommand(pi: ExtensionAPI, client: DeepSeekClient): void {
 	pi.registerCommand("deepseek-tools", {
-		description: "DeepSeek Search and Fetch: on/off, key source, connection test",
+		description: "Toggle the DeepSeek search and fetch tools, or inspect their state",
 		getArgumentCompletions: (prefix) => {
 			const typed = prefix.trim().toLowerCase();
 			return ACTIONS.filter(({ action }) => action.startsWith(typed)).map(({ action, label }) => ({
@@ -56,26 +55,19 @@ export function registerDeepSeekCommand(pi: ExtensionAPI, client: DeepSeekClient
 		},
 		handler: async (args, ctx) => {
 			const [action, ...rest] = args.trim().split(/\s+/).filter(Boolean);
-			if (rest.length > 0 || (action !== undefined && action !== "toggle" && !ACTIONS.some((entry) => entry.action === action))) {
+			if (action === undefined && rest.length === 0) {
+				setEnabled(pi, !enabled, ctx);
+				return;
+			}
+			if (rest.length > 0 || !ACTIONS.some((entry) => entry.action === action)) {
 				ctx.ui.notify(USAGE, "warning");
 				return;
 			}
-			switch (action) {
-				case "on":
-					setEnabled(pi, true, ctx);
-					return;
-				case "off":
-					setEnabled(pi, false, ctx);
-					return;
-				case "toggle":
-					setEnabled(pi, !enabled, ctx);
-					return;
-				case "test":
-					await testConnection(client, ctx);
-					return;
-				default:
-					ctx.ui.notify(statusLine(), "info");
+			if (action === "test") {
+				await testConnection(client, ctx);
+				return;
 			}
+			ctx.ui.notify(statusLine(), "info");
 		},
 	});
 
@@ -92,8 +84,8 @@ function setEnabled(pi: ExtensionAPI, next: boolean, ctx: ExtensionContext): voi
 	if (!ctx.hasUI) return;
 	ctx.ui.notify(
 		next
-			? "DeepSeek tools on. Every successful search or fetch bills ¥5 per 1,000 requests."
-			: "DeepSeek tools off. The model cannot call them and nothing is billed.",
+			? `${LABEL} on. Every successful search or fetch bills ¥5 per 1,000 requests.`
+			: `${LABEL} off. The model cannot call them and nothing is billed.`,
 		next ? "warning" : "info",
 	);
 }
@@ -107,8 +99,8 @@ function statusLine(): string {
 	const info = findApiKey();
 	const spend = calls > 0 ? `${calls} call${calls === 1 ? "" : "s"} · ¥${yuan(calls * PRICE_PER_CALL_YUAN)}` : "no calls";
 	const state = enabled ? "on" : "off";
-	if (!info) return `DeepSeek tools · ${state} · no key: run /login deepseek, or set DEEPSEEK_API_KEY · ${spend}`;
-	return `DeepSeek tools · ${state} · key: ${info.source} (${maskKey(info.key)}) · 5 results by default · ${spend}`;
+	if (!info) return `${LABEL} · ${state} · no key: run /login deepseek, or set DEEPSEEK_API_KEY · ${spend}`;
+	return `${LABEL} · ${state} · key: ${info.source} (${maskKey(info.key)}) · 5 results by default · ${spend}`;
 }
 
 async function testConnection(client: DeepSeekClient, ctx: ExtensionCommandContext): Promise<void> {
@@ -138,16 +130,16 @@ function refreshStatus(ctx: ExtensionContext | undefined): void {
 		found = false;
 	}
 	if (!found) {
-		ctx.ui.setStatus(STATUS_KEY, theme.fg("warning", "deepseek no key · /login deepseek"));
+		ctx.ui.setStatus(STATUS_KEY, theme.fg("warning", `${LABEL} no key · /login deepseek`));
 		return;
 	}
 	if (!enabled) {
-		ctx.ui.setStatus(STATUS_KEY, theme.fg("muted", "deepseek off"));
+		ctx.ui.setStatus(STATUS_KEY, theme.fg("muted", `${LABEL} off`));
 		return;
 	}
 	ctx.ui.setStatus(
 		STATUS_KEY,
-		theme.fg("dim", calls === 0 ? "deepseek on" : `deepseek on · ¥${yuan(calls * PRICE_PER_CALL_YUAN)}`),
+		theme.fg("dim", calls === 0 ? `${LABEL} on` : `${LABEL} on · ¥${yuan(calls * PRICE_PER_CALL_YUAN)}`),
 	);
 }
 

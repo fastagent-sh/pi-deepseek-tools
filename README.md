@@ -84,12 +84,11 @@ One command, named after the package. It reports state; setting a key stays with
 
 | Command | What it does |
 |---|---|
-| `/deepseek-tools` | The same as `status` |
+| `/deepseek-tools` | Toggle the tools on or off; `ctrl+shift+d` does the same |
 | `/deepseek-tools status` | State, key source (masked), default result count, calls and spend this session |
-| `/deepseek-tools on` / `off` / `toggle` | Switch the tools on or off; `ctrl+shift+d` does the same |
 | `/deepseek-tools test` | One real search, reported with latency and cost |
 
-The footer always names the state, so a paid call is never a surprise: `deepseek on`, `deepseek on · ¥0.015` once a session has spent money, `deepseek off`, or `deepseek no key · /login deepseek`. Turning the tools off removes them from the model's toolset, so it cannot call them and nothing is billed.
+The footer always names the state, so a paid call is never a surprise: `deepseek-tools(search/fetch) on`, the same with `· ¥0.015` once a session has spent money, `deepseek-tools(search/fetch) off`, or `deepseek-tools(search/fetch) no key · /login deepseek`. Turning the tools off removes them from the model's toolset, so it cannot call them and nothing is billed.
 
 The tools are on by default. To start every session with them off, add this to `~/.pi/agent/settings.json`:
 
