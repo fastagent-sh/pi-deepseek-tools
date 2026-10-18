@@ -1,6 +1,6 @@
 {
   "name": "@fastagent-sh/pi-deepseek-tools",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "DeepSeek Search and Fetch tools API as two Pi tools: ranked web results with model-ready summaries, and any page as Markdown. Loads alongside pi-web-access.",
   "type": "module",
   "license": "MIT",
