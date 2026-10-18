@@ -3,7 +3,7 @@ import { existsSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { Text } from "@earendil-works/pi-tui";
+import { Text, visibleWidth } from "@earendil-works/pi-tui";
 import type {
 	ExtensionAPI,
 	ExtensionCommandContext,
@@ -408,6 +408,27 @@ test("a terminal resize refreshes the footer", async () => {
 	} finally {
 		env.restore();
 	}
+});
+
+test("a long CJK title is clipped by terminal cells, not code units", () => {
+	const tool = registerTools().get("deepseek_search");
+	assert.ok(tool?.renderResult);
+	const result = {
+		content: [{ type: "text", text: "" }],
+		details: {
+			query: "q",
+			count: 1,
+			includeContent: false,
+			durationMs: 10,
+			top: [{ title: "深".repeat(100), host: "example.com" }],
+		},
+	};
+	const lines = (tool.renderResult(result as never, partial, theme, renderContext) as Text).render(120);
+	const titleLine = lines.find((line) => line.trimStart().startsWith("1."));
+	assert.ok(titleLine, "the preview line is missing");
+	// Text pads every line to the render width, so measure the content itself.
+	const cells = visibleWidth(titleLine.trimEnd());
+	assert.ok(cells <= 100, `the preview line is ${cells} cells`);
 });
 
 test("/deepseek-tools completes status and test", async () => {

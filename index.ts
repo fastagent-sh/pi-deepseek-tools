@@ -8,7 +8,7 @@ import {
 	truncateHead,
 	type ExtensionAPI,
 } from "@earendil-works/pi-coding-agent";
-import { Text } from "@earendil-works/pi-tui";
+import { Text, truncateToWidth } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import {
 	createDeepSeekClient,
@@ -239,8 +239,9 @@ function hostOf(url: string): string {
 	}
 }
 
-function clip(text: string, max: number): string {
-	return text.length > max ? `${text.slice(0, max - 1)}…` : text;
+function clip(text: string, columns: number): string {
+	// Terminal cells, not code units: a clipped CJK title must still fit its row.
+	return truncateToWidth(text, columns, "…");
 }
 
 async function writeFullPage(page: FetchedPage): Promise<string> {

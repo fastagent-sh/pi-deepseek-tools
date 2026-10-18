@@ -88,7 +88,7 @@ One command, named after the package. It reports state; setting a key stays with
 
 | Command | What it does |
 |---|---|
-| `/deepseek-tools` | Toggle the tools on or off; `ctrl+shift+d` does the same |
+| `/deepseek-tools` | Toggle the tools for this session; `ctrl+shift+d` does the same |
 | `/deepseek-tools status` | State, key source (masked), default result count, calls and spend this session |
 | `/deepseek-tools test` | One real search, reported with latency and cost |
 
@@ -118,6 +118,7 @@ Each endpoint allows 5 QPS per account; the retry loop absorbs bursts from paral
 - A site's own error page comes back as content when DeepSeek can extract it, so a successful fetch does not prove the URL existed.
 - Some sites are refused by DeepSeek's fetcher (Wikipedia is one). The error names the reason, and the search summary usually carries enough to answer.
 - Network failures other than timeouts are reported without a retry.
+- Queries, and every URL you fetch, are sent to `api.deepseek.com`. Nothing is fetched from this machine.
 
 ## Development
 
