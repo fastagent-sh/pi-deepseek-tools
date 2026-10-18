@@ -11,7 +11,10 @@ function register(): Map<string, ToolDefinition> {
 	extension({
 		on: () => () => {},
 		registerCommand: () => {},
+		registerShortcut: () => {},
 		registerTool: (tool: ToolDefinition) => tools.set(tool.name, tool),
+		getActiveTools: () => ["deepseek_search", "deepseek_fetch"],
+		setActiveTools: () => {},
 	} as unknown as ExtensionAPI);
 	return tools;
 }

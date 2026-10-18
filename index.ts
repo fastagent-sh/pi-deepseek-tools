@@ -12,16 +12,17 @@ import { Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import {
 	createDeepSeekClient,
+	DeepSeekError,
 	formatFetchedPage,
 	formatSearchResults,
 	type FetchedPage,
-	type SearchResult,
 } from "./deepseek.ts";
 import {
 	clearSessionStatus,
 	recordCall,
 	registerDeepSeekCommand,
-	resetSessionStatus,
+	startSession,
+	isEnabled,
 } from "./commands.ts";
 
 const client = createDeepSeekClient();
@@ -81,7 +82,7 @@ type SearchDetails = {
 type FetchDetails = { url: string; title: string; bytes: number; truncated: boolean; durationMs: number };
 
 export default function (pi: ExtensionAPI) {
-	pi.on("session_start", (_event, ctx) => resetSessionStatus(ctx));
+	pi.on("session_start", (_event, ctx) => startSession(pi, ctx));
 	pi.on("session_shutdown", (_event, ctx) => clearSessionStatus(ctx));
 	registerDeepSeekCommand(pi, client);
 
@@ -122,6 +123,7 @@ export default function (pi: ExtensionAPI) {
 		},
 
 		async execute(_toolCallId, params, signal, _onUpdate, ctx) {
+			if (!isEnabled()) throw new DeepSeekError("DeepSeek tools are off. Run /deepseek-tools on to enable them.");
 			const started = Date.now();
 			const includeContent = params.includeContent ?? false;
 			const results = await client.search({
@@ -183,6 +185,7 @@ export default function (pi: ExtensionAPI) {
 		},
 
 		async execute(_toolCallId, params, signal, _onUpdate, ctx) {
+			if (!isEnabled()) throw new DeepSeekError("DeepSeek tools are off. Run /deepseek-tools on to enable them.");
 			const started = Date.now();
 			const page = await client.fetchPage(params.url, { signal });
 			recordCall(ctx);

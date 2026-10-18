@@ -85,12 +85,19 @@ One command, named after the package. It reports state; setting a key stays with
 | Command | What it does |
 |---|---|
 | `/deepseek-tools` | The same as `status` |
-| `/deepseek-tools status` | Key source (masked), default result count, calls and spend this session |
+| `/deepseek-tools status` | State, key source (masked), default result count, calls and spend this session |
+| `/deepseek-tools on` / `off` / `toggle` | Switch the tools on or off; `ctrl+shift+d` does the same |
 | `/deepseek-tools test` | One real search, reported with latency and cost |
 
-Tab completes the two actions. While a session runs, the footer shows `deepseek · 3 calls · ¥0.015` after each call, and `deepseek · no api key · /login deepseek` until a key resolves.
+The footer always names the state, so a paid call is never a surprise: `deepseek on`, `deepseek on · ¥0.015` once a session has spent money, `deepseek off`, or `deepseek no key · /login deepseek`. Turning the tools off removes them from the model's toolset, so it cannot call them and nothing is billed.
 
-Tool rows are compact by default: a search shows `2 results · 0.8s` plus the first three titles with their hosts, and a fetch shows the page title, size and whether it was truncated. Expand the row to read the full result text.
+The tools are on by default. To start every session with them off, add this to `~/.pi/agent/settings.json`:
+
+```json
+{ "deepseek-tools": { "enabledByDefault": false } }
+```
+
+Tab completes the actions. Tool rows stay compact while a session runs: a search shows `2 results · 0.8s` plus the first three titles with their hosts, and a fetch shows the page title, size and whether it was truncated. Expand the row to read the full result text.
 
 ## Behavior
 
