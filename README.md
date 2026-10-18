@@ -17,6 +17,10 @@ Two [Pi](https://pi.dev) tools for DeepSeek's [Search and Fetch APIs](https://ap
 pi install npm:@fastagent-sh/pi-deepseek-tools
 ```
 
+<p align="center">
+  <a href="https://cdn.jsdelivr.net/gh/fastagent-sh/pi-deepseek-tools@main/assets/demo.mp4"><img src="https://cdn.jsdelivr.net/gh/fastagent-sh/pi-deepseek-tools@main/assets/demo.gif" alt="A search returns three ranked results, then the footer toggles the paid tools off and on" width="820"></a>
+</p>
+
 | Tool | Endpoint | Returns |
 |---|---|---|
 | `deepseek_search` | `POST /v1/tools/search` | Ranked results: title, URL, a summary written for models (typically 600-800 characters), site, date, `rerank_score` (0-3), `authority` (0-4), optional page text |
@@ -122,6 +126,8 @@ npm install
 npm test        # node --test against a local mock server
 npm run typecheck
 ```
+
+The demo above is recorded from the real terminal: `./scripts/record-demo.sh` prepares a clean agent directory in `~/pi-deepseek-tools` and drives `vhs` through a search and the on/off toggle. It needs `vhs`, `ttyd`, `ffmpeg` and a DeepSeek credential in the pi agent directory.
 
 Publishing runs from a GitHub Release (`v1.0.0`) through Trusted Publishing with provenance; see [`.github/workflows/publish.yml`](.github/workflows/publish.yml).
 

@@ -31,14 +31,14 @@
   "files": [
     "*.ts",
     "README.md",
-    "LICENSE",
-    "assets/banner.png"
+    "LICENSE"
   ],
   "pi": {
     "extensions": [
       "./index.ts"
     ],
-    "image": "https://cdn.jsdelivr.net/gh/fastagent-sh/pi-deepseek-tools@main/assets/banner.png"
+    "image": "https://cdn.jsdelivr.net/gh/fastagent-sh/pi-deepseek-tools@main/assets/banner.png",
+    "video": "https://cdn.jsdelivr.net/gh/fastagent-sh/pi-deepseek-tools@main/assets/demo.mp4"
   },
   "publishConfig": {
     "access": "public"
