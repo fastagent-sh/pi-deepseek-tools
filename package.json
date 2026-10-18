@@ -42,8 +42,7 @@
     "image": "https://cdn.jsdelivr.net/gh/fastagent-sh/pi-deepseek-web@main/assets/banner.png"
   },
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "scripts": {
     "test": "node --test",
