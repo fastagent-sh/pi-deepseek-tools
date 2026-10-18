@@ -78,6 +78,20 @@ deepseek_search {"query": "deepseek v4 release site:github.com OR site:huggingfa
 
 Text output is truncated at 50 KB / 2000 lines. A page that exceeds the limit is also written to a temp file and the result names its path. Both tools declare an `outputSchema`, so `codemode` scripts receive `structuredContent` instead of text.
 
+## Commands and terminal UI
+
+`/deepseek` opens a menu; the same actions work as arguments and complete on Tab.
+
+| Command | What it does |
+|---|---|
+| `/deepseek status` | Key source (masked), default result count, calls and spend this session |
+| `/deepseek key` | Saves a key to `web-search.json` with mode 0600, and says so when `DEEPSEEK_API_KEY` or `pi auth` still takes precedence |
+| `/deepseek test` | One real search, reported with latency and cost |
+
+While a session runs, the footer shows `deepseek · 3 calls · ¥0.015` after each call, and `deepseek · no api key · /deepseek key` until a key resolves.
+
+Tool rows are compact by default: a search shows `2 results · 0.8s` plus the first three titles with their hosts, and a fetch shows the page title, size and whether it was truncated. Expand the row to read the full result text.
+
 ## Behavior
 
 - Retries HTTP 408, 429 and 5xx up to three attempts, honoring `Retry-After` and capping the delay at 5 s. Other 4xx errors fail immediately with the API message.

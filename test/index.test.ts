@@ -8,7 +8,11 @@ import extension from "../index.ts";
 
 function register(): Map<string, ToolDefinition> {
 	const tools = new Map<string, ToolDefinition>();
-	extension({ registerTool: (tool: ToolDefinition) => tools.set(tool.name, tool) } as unknown as ExtensionAPI);
+	extension({
+		on: () => () => {},
+		registerCommand: () => {},
+		registerTool: (tool: ToolDefinition) => tools.set(tool.name, tool),
+	} as unknown as ExtensionAPI);
 	return tools;
 }
 

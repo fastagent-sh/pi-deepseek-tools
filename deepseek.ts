@@ -13,6 +13,8 @@ const MAX_QUERY_CHARS = 128;
 const MAX_URL_CHARS = 8192;
 // Search returns one page per result, so cap each body to leave room for the others.
 const MAX_RESULT_CONTENT_CHARS = 4_000;
+// DeepSeek bills ¥5 per 1,000 successful requests on each endpoint.
+export const PRICE_PER_CALL_YUAN = 0.005;
 
 export class DeepSeekError extends Error {
 	readonly status?: number;
@@ -192,12 +194,16 @@ export function formatFetchedPage(page: FetchedPage): string {
 	return page.title ? `# ${page.title}\n\n${page.content}` : page.content;
 }
 
-export function resolveApiKey(): string {
+export type ApiKeySource = "DEEPSEEK_API_KEY" | "pi auth" | "web-search.json";
+
+export type ApiKeyInfo = { key: string; source: ApiKeySource };
+
+export function findApiKey(): ApiKeyInfo | undefined {
 	const fromEnv = process.env.DEEPSEEK_API_KEY?.trim();
-	if (fromEnv) return fromEnv;
+	if (fromEnv) return { key: fromEnv, source: "DEEPSEEK_API_KEY" };
 	const stored = readStoredCredential("deepseek");
 	const storedKey = stored?.type === "api_key" ? stored.key?.trim() : undefined;
-	if (storedKey) return storedKey;
+	if (storedKey) return { key: storedKey, source: "pi auth" };
 	const configPath = webSearchConfigPath();
 	if (existsSync(configPath)) {
 		let parsed: unknown;
@@ -207,16 +213,22 @@ export function resolveApiKey(): string {
 			throw new DeepSeekError(`Cannot parse ${configPath}: ${errorMessage(error)}`);
 		}
 		const configured = isRecord(parsed) ? asString(parsed.deepseekApiKey) : "";
-		if (configured) return configured;
+		if (configured) return { key: configured, source: "web-search.json" };
 	}
+	return undefined;
+}
+
+export function resolveApiKey(): string {
+	const found = findApiKey();
+	if (found) return found.key;
 	throw new DeepSeekError(
 		"DeepSeek API key not found. Run `pi auth` (or set DEEPSEEK_API_KEY, or add \"deepseekApiKey\" to " +
-			`${configPath}). Get a key at https://platform.deepseek.com/api_keys`,
+			`${webSearchConfigPath()}). Get a key at https://platform.deepseek.com/api_keys`,
 	);
 }
 
 // The same file and field pi-web-access reads, so one configured key serves both packages.
-function webSearchConfigPath(): string {
+export function webSearchConfigPath(): string {
 	const agentDir = process.env.PI_CODING_AGENT_DIR;
 	if (agentDir) return join(agentDir, "web-search.json");
 	const current = join(homedir(), ".pi", "agent", "web-search.json");
