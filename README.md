@@ -136,7 +136,8 @@ Publishing runs from a GitHub Release (`v1.0.0`) through Trusted Publishing with
 
 This extension is one of the Pi packages published by [fastagent](https://fastagent.sh), the runtime that turns a local agent directory into a live service in your app, on Telegram, Slack or Feishu, or behind any channel.
 
-- [fastagent.sh](https://fastagent.sh) — the product and docs
+- [github.com/fastagent-sh/fastagent](https://github.com/fastagent-sh/fastagent) — the runtime, MIT
+- [fastagent.sh](https://fastagent.sh) — the docs
 - [github.com/fastagent-sh](https://github.com/fastagent-sh) — every package, including [`@fastagent-sh/fastagent`](https://www.npmjs.com/package/@fastagent-sh/fastagent) and [`@fastagent-sh/pi-web-access`](https://www.npmjs.com/package/@fastagent-sh/pi-web-access)
 - [@kid7st](https://x.com/kid7st) — build notes and releases
 
