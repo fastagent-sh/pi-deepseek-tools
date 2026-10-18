@@ -35,6 +35,19 @@ pi install npm:@fastagent-sh/pi-deepseek-web
 | Providers | DeepSeek only | many search providers, local extraction | provider-native search |
 | Model call needed | no | no | yes |
 
+## Cost
+
+DeepSeek bills ¥5 per 1,000 successful requests for each endpoint — about $0.70 — and charges nothing for failed requests or a search that returns no results.
+
+| API | List price per 1,000 requests |
+|---|---|
+| DeepSeek Search / Fetch | ¥5 ≈ $0.70 |
+| Brave Search | $5 |
+| Tavily (basic search) | $5-8 |
+| Exa (search) | $7 |
+
+List prices in October 2026. `api.deepseek.com` is reached directly from mainland China, so neither the key nor the requests need a proxy.
+
 ## API key
 
 Resolved in this order:
@@ -74,7 +87,7 @@ Text output is truncated at 50 KB / 2000 lines. A page that exceeds the limit is
 
 ## Limits and cost
 
-DeepSeek bills ¥5 per 1,000 successful requests (about $0.75) for each endpoint, and only successful requests with a result are charged. Each endpoint allows 5 QPS per account; the retry loop absorbs bursts from parallel tool calls. A `query` over 128 characters is rejected before the request is sent.
+Each endpoint allows 5 QPS per account; the retry loop absorbs bursts from parallel tool calls. A `query` over 128 characters is rejected before the request is sent. Billing follows the [DeepSeek price list](https://api-docs.deepseek.com/zh-cn/guides/search/#计费): only a request that returns results is charged.
 
 ## Development
 
