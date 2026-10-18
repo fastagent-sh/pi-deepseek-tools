@@ -3,8 +3,12 @@
     "target": "ES2023",
     "module": "Preserve",
     "moduleResolution": "bundler",
-    "lib": ["ES2023"],
-    "types": ["node"],
+    "lib": [
+      "ES2023"
+    ],
+    "types": [
+      "node"
+    ],
     "strict": true,
     "noEmit": true,
     "allowImportingTsExtensions": true,
@@ -12,5 +16,8 @@
     "verbatimModuleSyntax": true,
     "skipLibCheck": true
   },
-  "include": ["index.ts", "deepseek.ts", "test"]
+  "include": [
+    "*.ts",
+    "test"
+  ]
 }

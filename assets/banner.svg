@@ -14,10 +14,10 @@
     <text x="1150" y="560" font-size="300">W</text>
   </g>
   <text x="80" y="126" font-family="ui-monospace, Menlo, monospace" font-size="23" letter-spacing="5" fill="#7d7d82">FASTAGENT / PI EXTENSION</text>
-  <text x="76" y="330" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-weight="700" font-size="132" fill="url(#sheen)">DeepSeek Web</text>
+  <text x="76" y="330" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-weight="700" font-size="132" fill="url(#sheen)">DeepSeek Tools</text>
   <text x="80" y="404" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="40" fill="#f2f2f2">Search and page fetch, as two Pi tools.</text>
   <text x="80" y="462" font-family="Helvetica, Arial, sans-serif" font-size="28" fill="#a2a2a8">Ranked results with model-ready summaries. Any page as Markdown. No model call needed.</text>
   <rect x="80" y="512" width="820" height="64" rx="10" fill="#151517" stroke="#2b2b2f"/>
-  <text x="104" y="553" font-family="ui-monospace, Menlo, monospace" font-size="22" fill="#e6e6e6">$ pi install npm:@fastagent-sh/pi-deepseek-web</text>
-  <text x="80" y="606" font-family="Helvetica, Arial, sans-serif" font-size="20" fill="#6f6f76">fastagent.sh  ·  ¥5 per 1,000 requests  ·  key from pi auth or DEEPSEEK_API_KEY</text>
+  <text x="104" y="553" font-family="ui-monospace, Menlo, monospace" font-size="22" fill="#e6e6e6">$ pi install npm:@fastagent-sh/pi-deepseek-tools</text>
+  <text x="80" y="606" font-family="Helvetica, Arial, sans-serif" font-size="20" fill="#6f6f76">fastagent.sh  ·  ¥5 per 1,000 requests  ·  key from /login deepseek or DEEPSEEK_API_KEY</text>
 </svg>

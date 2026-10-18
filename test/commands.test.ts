@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -14,7 +14,7 @@ import type {
 import extension from "../index.ts";
 import type { DeepSeekClient, SearchResult } from "../deepseek.ts";
 import { DeepSeekError } from "../deepseek.ts";
-import { recordCall, registerDeepSeekCommand, resetSessionStatus } from "../ui.ts";
+import { recordCall, registerDeepSeekCommand, resetSessionStatus } from "../commands.ts";
 
 const theme = { fg: (_token: string, text: string) => text, bold: (text: string) => text } as unknown as Theme;
 
@@ -101,7 +101,7 @@ test("an error result renders the error line", () => {
 	assert.match(rendered, /HTTP 401: bad key/);
 });
 
-function commandHarness(options: { input?: string; select?: string; client?: DeepSeekClient } = {}) {
+function commandHarness(options: { client?: DeepSeekClient } = {}) {
 	const notices: Array<{ message: string; type: string }> = [];
 	const statuses = new Map<string, string | undefined>();
 	const ctx = {
@@ -110,10 +110,7 @@ function commandHarness(options: { input?: string; select?: string; client?: Dee
 		ui: {
 			theme,
 			notify: (message: string, type: "info" | "warning" | "error" = "info") => notices.push({ message, type }),
-			input: async () => options.input,
-			select: async () => options.select,
 			setStatus: (key: string, value: string | undefined) => statuses.set(key, value),
-			confirm: async () => true,
 		},
 	} as unknown as ExtensionCommandContext;
 	let command: RegisteredCommand | undefined;
@@ -146,7 +143,7 @@ function isolateEnv(): { dir: string; restore: () => void } {
 	};
 }
 
-test("/deepseek status reports the key source without printing the key", async () => {
+test("/deepseek-tools status reports the key source without printing the key", async () => {
 	const env = isolateEnv();
 	process.env.DEEPSEEK_API_KEY = "sk-abcdef0123456789abcdef";
 	try {
@@ -160,61 +157,45 @@ test("/deepseek status reports the key source without printing the key", async (
 	}
 });
 
-test("/deepseek status says what to do without a key", async () => {
+test("/deepseek-tools sends a bare call and status to the same line", async () => {
+	const env = isolateEnv();
+	process.env.DEEPSEEK_API_KEY = "sk-0123456789abcdefghij";
+	try {
+		const harness = commandHarness();
+		await harness.run("");
+		assert.match(harness.notices[0].message, /^DeepSeek tools · key: DEEPSEEK_API_KEY/);
+		await harness.run("status");
+		assert.equal(harness.notices.at(-1)!.message, harness.notices[0].message);
+	} finally {
+		env.restore();
+	}
+});
+
+test("/deepseek-tools points at a missing key without writing anything", async () => {
 	const env = isolateEnv();
 	try {
 		const harness = commandHarness();
 		await harness.run("status");
-		assert.match(harness.notices[0].message, /No key configured.*\/deepseek key/);
+		assert.match(harness.notices[0].message, /no key: run \/login deepseek, or set DEEPSEEK_API_KEY/);
+		assert.equal(existsSync(join(env.dir, "web-search.json")), false);
 	} finally {
 		env.restore();
 	}
 });
 
-test("/deepseek key saves the key beside the other web-search settings", async () => {
+test("/deepseek-tools rejects unknown arguments with its usage line", async () => {
 	const env = isolateEnv();
 	try {
-		writeFileSync(join(env.dir, "web-search.json"), JSON.stringify({ provider: "deepseek" }));
-		const harness = commandHarness({ input: "sk-0123456789abcdefghij" });
-		await harness.run("key");
-
-		const saved = JSON.parse(readFileSync(join(env.dir, "web-search.json"), "utf-8"));
-		assert.equal(saved.deepseekApiKey, "sk-0123456789abcdefghij");
-		assert.equal(saved.provider, "deepseek");
-		assert.equal(statSync(join(env.dir, "web-search.json")).mode & 0o777, 0o600);
-		assert.match(harness.notices.at(-1)!.message, /Saved to .*web-search\.json/);
-		assert.equal(harness.statuses.get("deepseek"), undefined);
-	} finally {
-		env.restore();
-	}
-});
-
-test("/deepseek key warns when a higher-priority key wins", async () => {
-	const env = isolateEnv();
-	process.env.DEEPSEEK_API_KEY = "sk-env0123456789abcdefghij";
-	try {
-		const harness = commandHarness({ input: "sk-0123456789abcdefghij" });
-		await harness.run("key");
+		const harness = commandHarness();
+		await harness.run("key sk-123");
 		assert.equal(harness.notices.at(-1)!.type, "warning");
-		assert.match(harness.notices.at(-1)!.message, /DEEPSEEK_API_KEY takes precedence/);
+		assert.match(harness.notices.at(-1)!.message, /^Usage: \/deepseek-tools \[status\|test\]/);
 	} finally {
 		env.restore();
 	}
 });
 
-test("/deepseek key rejects an implausible key and leaves the file alone", async () => {
-	const env = isolateEnv();
-	try {
-		const harness = commandHarness({ input: "short" });
-		await harness.run("key");
-		assert.equal(harness.notices.at(-1)!.type, "warning");
-		assert.throws(() => statSync(join(env.dir, "web-search.json")));
-	} finally {
-		env.restore();
-	}
-});
-
-test("/deepseek test reports success and the session spend", async () => {
+test("/deepseek-tools test reports success and the session spend", async () => {
 	const env = isolateEnv();
 	process.env.DEEPSEEK_API_KEY = "sk-0123456789abcdefghij";
 	try {
@@ -226,14 +207,14 @@ test("/deepseek test reports success and the session spend", async () => {
 		} as unknown as DeepSeekClient;
 		const harness = commandHarness({ client });
 		await harness.run("test");
-		assert.match(harness.notices.at(-1)!.message, /Key works: 1 result in \d+ms · ¥0\.005/);
+		assert.match(harness.notices.at(-1)!.message, /DeepSeek works: 1 result in \d+ms · ¥0\.005/);
 		assert.match(harness.statuses.get("deepseek") ?? "", /1 call · ¥0\.005/);
 	} finally {
 		env.restore();
 	}
 });
 
-test("/deepseek test surfaces the API error", async () => {
+test("/deepseek-tools test surfaces the API error", async () => {
 	const env = isolateEnv();
 	process.env.DEEPSEEK_API_KEY = "sk-0123456789abcdefghij";
 	try {
@@ -251,12 +232,12 @@ test("/deepseek test surfaces the API error", async () => {
 	}
 });
 
-test("session status counts calls and flags a missing key", () => {
+test("session status counts calls and points a missing key at /login", () => {
 	const env = isolateEnv();
 	try {
 		const harness = commandHarness();
 		resetSessionStatus(harness.ctx);
-		assert.match(harness.statuses.get("deepseek") ?? "", /deepseek · no api key · \/deepseek key/);
+		assert.match(harness.statuses.get("deepseek") ?? "", /deepseek · no api key · \/login deepseek/);
 
 		process.env.DEEPSEEK_API_KEY = "sk-0123456789abcdefghij";
 		resetSessionStatus(harness.ctx);
@@ -269,8 +250,8 @@ test("session status counts calls and flags a missing key", () => {
 	}
 });
 
-test("/deepseek completes subcommands", async () => {
+test("/deepseek-tools completes its subcommands", async () => {
 	const harness = commandHarness();
-	const completions = await harness.command.getArgumentCompletions!("te");
-	assert.deepEqual(completions?.map((item) => item.value), ["test"]);
+	const completions = await harness.command.getArgumentCompletions!("s");
+	assert.deepEqual(completions?.map((item) => item.value), ["status"]);
 });

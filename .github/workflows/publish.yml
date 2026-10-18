@@ -1,8 +1,8 @@
 name: Publish
 
 # Publish to npm from a GitHub Release via Trusted Publishing (OIDC), with provenance and no NPM_TOKEN.
-# The npm trusted publisher for @fastagent-sh/pi-deepseek-web must name org fastagent-sh, repo
-# pi-deepseek-web, workflow publish.yml, environment npm. The protected environment is the manual
+# The npm trusted publisher for @fastagent-sh/pi-deepseek-tools must name org fastagent-sh, repo
+# pi-deepseek-tools, workflow publish.yml, environment npm. The protected environment is the manual
 # gate; this job also verifies the tag, the commit and the package name.
 on:
   release:
@@ -22,8 +22,8 @@ jobs:
         env:
           REPOSITORY: ${{ github.repository }}
         run: |
-          if [[ "$REPOSITORY" != "fastagent-sh/pi-deepseek-web" ]]; then
-            echo "publishing requires fastagent-sh/pi-deepseek-web (got $REPOSITORY)" >&2
+          if [[ "$REPOSITORY" != "fastagent-sh/pi-deepseek-tools" ]]; then
+            echo "publishing requires fastagent-sh/pi-deepseek-tools (got $REPOSITORY)" >&2
             exit 1
           fi
 
@@ -61,7 +61,7 @@ jobs:
         run: |
           node -e '
             const { name, version } = require("./package.json");
-            if (name !== "@fastagent-sh/pi-deepseek-web") { console.error("package name is " + name); process.exit(1) }
+            if (name !== "@fastagent-sh/pi-deepseek-tools") { console.error("package name is " + name); process.exit(1) }
             const expected = "v" + version;
             if (process.env.RELEASE_TAG !== expected) { console.error("release tag " + process.env.RELEASE_TAG + " does not match " + expected); process.exit(1) }
           '

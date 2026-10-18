@@ -22,7 +22,7 @@ import {
 	recordCall,
 	registerDeepSeekCommand,
 	resetSessionStatus,
-} from "./ui.ts";
+} from "./commands.ts";
 
 const client = createDeepSeekClient();
 

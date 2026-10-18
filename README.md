@@ -1,20 +1,20 @@
 <p align="center">
-  <a href="https://fastagent.sh"><img src="https://cdn.jsdelivr.net/gh/fastagent-sh/pi-deepseek-web@main/assets/banner.png" alt="DeepSeek Web — search and page fetch as two Pi tools, by fastagent" width="860"></a>
+  <a href="https://fastagent.sh"><img src="https://cdn.jsdelivr.net/gh/fastagent-sh/pi-deepseek-tools@main/assets/banner.png" alt="DeepSeek Tools — search and page fetch as two Pi tools, by fastagent" width="860"></a>
 </p>
 
-[![CI](https://github.com/fastagent-sh/pi-deepseek-web/actions/workflows/ci.yml/badge.svg)](https://github.com/fastagent-sh/pi-deepseek-web/actions/workflows/ci.yml)
-[![npm version](https://img.shields.io/npm/v/@fastagent-sh/pi-deepseek-web.svg)](https://www.npmjs.com/package/@fastagent-sh/pi-deepseek-web)
-[![downloads](https://img.shields.io/npm/dm/@fastagent-sh/pi-deepseek-web.svg)](https://www.npmjs.com/package/@fastagent-sh/pi-deepseek-web)
-[![license](https://img.shields.io/npm/l/@fastagent-sh/pi-deepseek-web.svg)](https://github.com/fastagent-sh/pi-deepseek-web/blob/main/LICENSE)
-[![node](https://img.shields.io/node/v/@fastagent-sh/pi-deepseek-web.svg)](https://nodejs.org)
+[![CI](https://github.com/fastagent-sh/pi-deepseek-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/fastagent-sh/pi-deepseek-tools/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/@fastagent-sh/pi-deepseek-tools.svg)](https://www.npmjs.com/package/@fastagent-sh/pi-deepseek-tools)
+[![downloads](https://img.shields.io/npm/dm/@fastagent-sh/pi-deepseek-tools.svg)](https://www.npmjs.com/package/@fastagent-sh/pi-deepseek-tools)
+[![license](https://img.shields.io/npm/l/@fastagent-sh/pi-deepseek-tools.svg)](https://github.com/fastagent-sh/pi-deepseek-tools/blob/main/LICENSE)
+[![node](https://img.shields.io/node/v/@fastagent-sh/pi-deepseek-tools.svg)](https://nodejs.org)
 [![built by fastagent](https://img.shields.io/badge/built%20by-fastagent-0b7285.svg)](https://fastagent.sh)
-[![GitHub stars](https://img.shields.io/github/stars/fastagent-sh/pi-deepseek-web?style=social)](https://github.com/fastagent-sh/pi-deepseek-web/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/fastagent-sh/pi-deepseek-tools?style=social)](https://github.com/fastagent-sh/pi-deepseek-tools/stargazers)
 [![follow @kid7st](https://img.shields.io/badge/follow-%40kid7st-000?logo=x)](https://x.com/kid7st)
 
 Two [Pi](https://pi.dev) tools for DeepSeek's [Search and Fetch APIs](https://api-docs.deepseek.com/zh-cn/guides/search/): ranked web results with model-ready summaries, and any page as Markdown. No model call is involved on either path.
 
 ```bash
-pi install npm:@fastagent-sh/pi-deepseek-web
+pi install npm:@fastagent-sh/pi-deepseek-tools
 ```
 
 | Tool | Endpoint | Returns |
@@ -28,7 +28,7 @@ pi install npm:@fastagent-sh/pi-deepseek-web
 - **The ranking is in the result.** `rerank_score` and `authority` come back with every hit, and the summary is written for a model to read, so the agent can judge a source before fetching it.
 - **No extra configuration.** The key is the DeepSeek credential pi already holds.
 
-| | `pi-deepseek-web` | `pi-web-access` | `pi-web-search` |
+| | `pi-deepseek-tools` | `pi-web-access` | `pi-web-search` |
 |---|---|---|---|
 | Tool names | `deepseek_search`, `deepseek_fetch` | `web_search`, `fetch_content` | `web_search`, `url_context` |
 | Coexists with the other two | yes | — | yes |
@@ -50,7 +50,7 @@ List prices in October 2026. `api.deepseek.com` is reached directly from mainlan
 
 ## API key
 
-Resolved in this order:
+Pi owns credentials: `/login deepseek` in a session, or `pi auth` from a shell. This package reads, in order:
 
 1. `DEEPSEEK_API_KEY`
 2. The `deepseek` credential from `pi auth` (`~/.pi/agent/auth.json`, or `$PI_CODING_AGENT_DIR` when set)
@@ -80,15 +80,15 @@ Text output is truncated at 50 KB / 2000 lines. A page that exceeds the limit is
 
 ## Commands and terminal UI
 
-`/deepseek` opens a menu; the same actions work as arguments and complete on Tab.
+One command, named after the package. It reports state; setting a key stays with Pi (`/login deepseek`).
 
 | Command | What it does |
 |---|---|
-| `/deepseek status` | Key source (masked), default result count, calls and spend this session |
-| `/deepseek key` | Saves a key to `web-search.json` with mode 0600, and says so when `DEEPSEEK_API_KEY` or `pi auth` still takes precedence |
-| `/deepseek test` | One real search, reported with latency and cost |
+| `/deepseek-tools` | The same as `status` |
+| `/deepseek-tools status` | Key source (masked), default result count, calls and spend this session |
+| `/deepseek-tools test` | One real search, reported with latency and cost |
 
-While a session runs, the footer shows `deepseek · 3 calls · ¥0.015` after each call, and `deepseek · no api key · /deepseek key` until a key resolves.
+Tab completes the two actions. While a session runs, the footer shows `deepseek · 3 calls · ¥0.015` after each call, and `deepseek · no api key · /login deepseek` until a key resolves.
 
 Tool rows are compact by default: a search shows `2 results · 0.8s` plus the first three titles with their hosts, and a fetch shows the page title, size and whether it was truncated. Expand the row to read the full result text.
 

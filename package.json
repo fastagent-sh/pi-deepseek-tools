@@ -1,17 +1,17 @@
 {
-  "name": "@fastagent-sh/pi-deepseek-web",
+  "name": "@fastagent-sh/pi-deepseek-tools",
   "version": "1.0.0",
-  "description": "DeepSeek Search and Fetch APIs as two Pi tools: ranked web results with model-ready summaries, and any page as Markdown. Loads alongside pi-web-access.",
+  "description": "DeepSeek Search and Fetch tools API as two Pi tools: ranked web results with model-ready summaries, and any page as Markdown. Loads alongside pi-web-access.",
   "type": "module",
   "license": "MIT",
   "author": "the fastagent authors (https://github.com/fastagent-sh)",
-  "homepage": "https://github.com/fastagent-sh/pi-deepseek-web#readme",
+  "homepage": "https://github.com/fastagent-sh/pi-deepseek-tools#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fastagent-sh/pi-deepseek-web.git"
+    "url": "git+https://github.com/fastagent-sh/pi-deepseek-tools.git"
   },
   "bugs": {
-    "url": "https://github.com/fastagent-sh/pi-deepseek-web/issues"
+    "url": "https://github.com/fastagent-sh/pi-deepseek-tools/issues"
   },
   "keywords": [
     "pi-package",
@@ -38,7 +38,7 @@
     "extensions": [
       "./index.ts"
     ],
-    "image": "https://cdn.jsdelivr.net/gh/fastagent-sh/pi-deepseek-web@main/assets/banner.png"
+    "image": "https://cdn.jsdelivr.net/gh/fastagent-sh/pi-deepseek-tools@main/assets/banner.png"
   },
   "publishConfig": {
     "access": "public"

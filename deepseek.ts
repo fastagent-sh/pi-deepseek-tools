@@ -222,8 +222,8 @@ export function resolveApiKey(): string {
 	const found = findApiKey();
 	if (found) return found.key;
 	throw new DeepSeekError(
-		"DeepSeek API key not found. Run `pi auth` (or set DEEPSEEK_API_KEY, or add \"deepseekApiKey\" to " +
-			`${webSearchConfigPath()}). Get a key at https://platform.deepseek.com/api_keys`,
+		"DeepSeek API key not found. Run /login deepseek in Pi (or `pi auth`, or set DEEPSEEK_API_KEY), or add " +
+			`"deepseekApiKey" to ${webSearchConfigPath()}. Get a key at https://platform.deepseek.com/api_keys`,
 	);
 }
 
