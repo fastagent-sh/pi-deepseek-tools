@@ -119,6 +119,7 @@ interface Harness {
 
 const STATUS_KEY = "deepseek-tools";
 const LABEL = "deepseek-tools(search/fetch)";
+const ICON = "🐳";
 
 function commandHarness(options: { client?: DeepSeekClient; activeTools?: string[] } = {}): Harness {
 	const notices: Array<{ message: string; type: string }> = [];
@@ -226,7 +227,7 @@ test("the ctrl+shift+d shortcut toggles the same state", async () => {
 		await startSession(harness.pi, harness.ctx);
 		harness.shortcuts.get("ctrl+shift+d")!(harness.ctx);
 		assert.equal(isEnabled(), false);
-		assert.match(harness.statuses.get(STATUS_KEY) ?? "", /deepseek-tools\(search\/fetch\) off/);
+		assert.equal(harness.statuses.get(STATUS_KEY), `${ICON} off`);
 		harness.shortcuts.get("ctrl+shift+d")!(harness.ctx);
 		assert.equal(isEnabled(), true);
 	} finally {
@@ -242,7 +243,7 @@ test("a disabled session starts with the tools removed and the footer saying so"
 		await startSession(harness.pi, harness.ctx);
 		assert.equal(isEnabled(), false);
 		assert.deepEqual(harness.active(), ["read"]);
-		assert.match(harness.statuses.get(STATUS_KEY) ?? "", /deepseek-tools\(search\/fetch\) off/);
+		assert.equal(harness.statuses.get(STATUS_KEY), `${ICON} off`);
 	} finally {
 		env.restore();
 	}
@@ -319,7 +320,7 @@ test("/deepseek-tools test reports success and the session spend", async () => {
 		await startSession(harness.pi, harness.ctx);
 		await harness.run("test");
 		assert.match(harness.notices.at(-1)!.message, /DeepSeek works: 1 result in \d+ms · ¥0\.005/);
-		assert.equal(harness.statuses.get(STATUS_KEY), `${LABEL} on · ¥0.005`);
+		assert.equal(harness.statuses.get(STATUS_KEY), `${ICON} on · ¥0.005`);
 	} finally {
 		env.restore();
 	}
@@ -349,14 +350,14 @@ test("footer text names the tools, the state and the spend", async () => {
 	try {
 		const harness = commandHarness();
 		await startSession(harness.pi, harness.ctx);
-		assert.match(harness.statuses.get(STATUS_KEY) ?? "", /^deepseek-tools\(search\/fetch\) no key · \/login deepseek$/);
+		assert.equal(harness.statuses.get(STATUS_KEY), `${ICON} no key · /login deepseek`);
 
 		process.env.DEEPSEEK_API_KEY = "sk-0123456789abcdefghij";
 		await startSession(harness.pi, harness.ctx);
-		assert.equal(harness.statuses.get(STATUS_KEY), `${LABEL} on`);
+		assert.equal(harness.statuses.get(STATUS_KEY), `${ICON} on`);
 		recordCall(harness.ctx);
 		recordCall(harness.ctx);
-		assert.equal(harness.statuses.get(STATUS_KEY), `${LABEL} on · ¥0.010`);
+		assert.equal(harness.statuses.get(STATUS_KEY), `${ICON} on · ¥0.010`);
 	} finally {
 		env.restore();
 	}

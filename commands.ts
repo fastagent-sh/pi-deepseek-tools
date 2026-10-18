@@ -10,6 +10,9 @@ import {
 import { PRICE_PER_CALL_YUAN, findApiKey, type DeepSeekClient } from "./deepseek.ts";
 
 const LABEL = "deepseek-tools(search/fetch)";
+// DeepSeek's mark is a whale; this is the terminal glyph closest to it. The footer keeps the
+// icon plus one state word, and stores no ANSI so a theme switch cannot leave stale colors.
+const ICON = "🐳";
 const STATUS_KEY = "deepseek-tools";
 const TOOL_NAMES = ["deepseek_search", "deepseek_fetch"];
 const USAGE = "Usage: /deepseek-tools [status|test] · no argument toggles the tools";
@@ -120,9 +123,6 @@ async function testConnection(client: DeepSeekClient, ctx: ExtensionCommandConte
 
 function refreshStatus(ctx: ExtensionContext | undefined): void {
 	if (!ctx?.hasUI) return;
-	const theme = ctx.ui.theme;
-	// The status line is decoration around a tool call; a UI without a theme must not fail the call.
-	if (typeof theme?.fg !== "function") return;
 	let found = true;
 	try {
 		found = Boolean(findApiKey());
@@ -130,17 +130,14 @@ function refreshStatus(ctx: ExtensionContext | undefined): void {
 		found = false;
 	}
 	if (!found) {
-		ctx.ui.setStatus(STATUS_KEY, theme.fg("warning", `${LABEL} no key · /login deepseek`));
+		ctx.ui.setStatus(STATUS_KEY, `${ICON} no key · /login deepseek`);
 		return;
 	}
 	if (!enabled) {
-		ctx.ui.setStatus(STATUS_KEY, theme.fg("muted", `${LABEL} off`));
+		ctx.ui.setStatus(STATUS_KEY, `${ICON} off`);
 		return;
 	}
-	ctx.ui.setStatus(
-		STATUS_KEY,
-		theme.fg("dim", calls === 0 ? `${LABEL} on` : `${LABEL} on · ¥${yuan(calls * PRICE_PER_CALL_YUAN)}`),
-	);
+	ctx.ui.setStatus(STATUS_KEY, calls === 0 ? `${ICON} on` : `${ICON} on · ¥${yuan(calls * PRICE_PER_CALL_YUAN)}`);
 }
 
 async function isEnabledByDefault(settingsPath = join(getAgentDir(), "settings.json")): Promise<boolean> {
