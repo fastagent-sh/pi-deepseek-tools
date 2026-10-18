@@ -1,0 +1,63 @@
+{
+  "name": "@fastagent-sh/pi-deepseek-web",
+  "version": "1.0.0",
+  "description": "DeepSeek Search and Fetch APIs as two Pi tools: ranked web results with model-ready summaries, and any page as Markdown. Loads alongside pi-web-access.",
+  "type": "module",
+  "license": "MIT",
+  "author": "the fastagent authors (https://github.com/fastagent-sh)",
+  "homepage": "https://github.com/fastagent-sh/pi-deepseek-web#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fastagent-sh/pi-deepseek-web.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fastagent-sh/pi-deepseek-web/issues"
+  },
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-coding-agent",
+    "pi-extension",
+    "deepseek",
+    "web-search",
+    "web-fetch",
+    "search-api",
+    "rag",
+    "fastagent"
+  ],
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "files": [
+    "index.ts",
+    "deepseek.ts",
+    "README.md",
+    "LICENSE",
+    "assets/banner.png"
+  ],
+  "pi": {
+    "extensions": [
+      "./index.ts"
+    ],
+    "image": "https://cdn.jsdelivr.net/gh/fastagent-sh/pi-deepseek-web@main/assets/banner.png"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "test": "node --test",
+    "typecheck": "tsc",
+    "prepublishOnly": "npm test && npm run typecheck"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "typebox": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "1.3.0",
+    "@types/node": "^24.0.0",
+    "typebox": "^1.3.27",
+    "typescript": "^7.0.2"
+  }
+}

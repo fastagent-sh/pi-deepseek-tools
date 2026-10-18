@@ -1,0 +1,76 @@
+name: Publish
+
+# Publish to npm from a GitHub Release via Trusted Publishing (OIDC), with provenance and no NPM_TOKEN.
+# The npm trusted publisher for @fastagent-sh/pi-deepseek-web must name org fastagent-sh, repo
+# pi-deepseek-web, workflow publish.yml, environment npm. The protected environment is the manual
+# gate; this job also verifies the tag, the commit and the package name.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write # OIDC token for Trusted Publishing
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - name: Verify release repository
+        env:
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          if [[ "$REPOSITORY" != "fastagent-sh/pi-deepseek-web" ]]; then
+            echo "publishing requires fastagent-sh/pi-deepseek-web (got $REPOSITORY)" >&2
+            exit 1
+          fi
+
+      - name: Check out release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Verify release commit is on main
+        run: |
+          git fetch origin main:refs/remotes/origin/main
+          git merge-base --is-ancestor HEAD origin/main || {
+            echo "release tag must point to a commit on main" >&2
+            exit 1
+          }
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+          scope: "@fastagent-sh"
+          cache: npm
+
+      # Trusted Publishing needs npm 11.5.1 or later.
+      - name: Use a current npm
+        run: npm install -g npm@11 && npm --version
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify package name and release tag
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          node -e '
+            const { name, version } = require("./package.json");
+            if (name !== "@fastagent-sh/pi-deepseek-web") { console.error("package name is " + name); process.exit(1) }
+            const expected = "v" + version;
+            if (process.env.RELEASE_TAG !== expected) { console.error("release tag " + process.env.RELEASE_TAG + " does not match " + expected); process.exit(1) }
+          '
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test -- --test-concurrency=2
+
+      - name: Publish with provenance
+        run: npm publish --provenance --access public
