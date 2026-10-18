@@ -29,3 +29,7 @@ command -v vhs >/dev/null || {
 	exit 1
 }
 vhs "${1:-scripts/demo.tape}"
+
+# A poster frame keeps the blog embed from reserving blank space before the video starts.
+ffmpeg -v error -ss 9 -i assets/demo.mp4 -frames:v 1 -vf "scale=1240:-1" assets/demo-poster.png -y
+echo "poster: assets/demo-poster.png"
